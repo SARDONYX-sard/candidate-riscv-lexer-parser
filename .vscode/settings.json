@@ -1,0 +1,24 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/*.bk": true,
+    "**/target": true,
+  },
+  "search.exclude": {
+    "out": true
+  },
+  "[rust]": {
+    "editor.formatOnSave": true
+  },
+  "editor.formatOnSave": true,
+  "git.ignoreLimitWarning": true,
+  "git.autoRepositoryDetection": false,
+  "cSpell.allowCompoundWords": true,
+  "cSpell.caseSensitive": true,
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "rust-analyzer.inlayHints.lifetimeElisionHints.enable": "skip_trivial",
+  "rust-analyzer.rustfmt.rangeFormatting.enable": true,
+  "rust-analyzer.inlayHints.maxLength": 5
+}

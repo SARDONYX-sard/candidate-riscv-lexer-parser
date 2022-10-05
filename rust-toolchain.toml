@@ -1,0 +1,6 @@
+[toolchain]
+# - https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file
+channel = "nightly-2022-10-03" # rustup 1.66
+# rustup run nightly rustc --version
+components = ["rust-src", "rustfmt", "clippy"]
+profile = "minimal"
