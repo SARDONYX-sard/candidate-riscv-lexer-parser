@@ -1,0 +1,78 @@
+// `_`: Does not get token.
+// - https://pest-parser.github.io/book/grammars/syntax.html#silent-and-atomic-rules)
+//
+// `@`: Does not generate internal token.
+
+//! WHITESPACE is not used.
+//! The reason is that it becomes impossible to distinguish between mnemonic and operaned,
+//! so separate them manually.
+space = _{ " "+ }
+
+// --------------------------------------------------------------
+// -- String tokens
+
+// Why are there two separate chars? => To eliminate `.`
+
+// 1. expect `fence` in `fence.vma`
+char = _{ "_" | ASCII_ALPHANUMERIC }
+
+// 2. expect `.vma` in `fence.vma`
+sub_char = _{ "." ~ ASCII_ALPHANUMERIC }
+
+// expect `_.e` in `_.entry1`
+// expect `_.1` in `_.1ntry1`
+string = _{ char ~ (sub_char)*  }
+
+// expect `_.entry1` in `_.entry1`
+symbol = { string+ }
+
+// --------------------------------------------------------------
+// -- Numeric tokens.
+
+num = @{ int ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ int)? }
+    int = { ("+" | "-")? ~ ASCII_DIGIT+ }
+
+operation = _{ add | subtract | multiply | divide | power }
+    add      = { "+" }
+    subtract = { "-" }
+    multiply = { "*" }
+    divide   = { "/" }
+    power    = { "^" }
+
+// - expect `a1 | 1 | 1 * (1 + 1)`
+term = _{ symbol | num | "(" ~ formula ~ ")" }
+// - expect `a1 + (1 / 1) * (1 + 1)`
+formula = _{ term ~ (operation ~ term)* }
+
+// --------------------------------------------------------------
+// --One line tokens
+
+newline = _{ "\n" | "\r\n" }
+
+// - expect `# comment`
+comment = { "#" ~ (!newline ~ ANY)* }
+
+// - expect `_entry`
+label =  { symbol ~ ":" }
+
+// - expect `.section .text .text1 .text-1`
+directive = { "." ~ symbol ~ space ~(("." | "+" | "-" )? ~ symbol ~ ("," ~ ("+" | "-")? ~ symbol)* )? }
+
+// - expect `addi` in `addi a1, a1, 1`
+mnemonic = @{ symbol }
+// - expect `a1 | a2 | 1 * (1 + 1)`
+operand = { formula | symbol }
+// - expect `addi a1, a1, 1`
+instruction = { mnemonic ~ (space ~ operand)? ~ space? ~  ("," ~ space? ~ operand ~ space? )* }
+
+// - expect `# comment | _entry: | .global | addi a1, a1, 1 | \r?\n`
+statement = _{ comment | label | directive | instruction | newline  | space}
+
+// - expect multiline statements
+program = _{ (statement)* ~ newline? }
+
+source = _{
+    SOI ~
+    program ~
+    EOI
+}

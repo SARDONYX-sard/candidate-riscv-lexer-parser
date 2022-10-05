@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "allowCompoundWords": true,
+  "words": [
+    "addi",
+    "Brack",
+    "chumsky",
+    "csrr",
+    "datas",
+    "globl",
+    "mhartid",
+    "nontokens",
+    "Peekable",
+    "prealloc",
+    "riscv",
+    "rodata"
+  ]
+}
