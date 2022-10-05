@@ -4,8 +4,8 @@
 
 ### Chumsky
 
-- [] lexer
-- [] parser
+- [ ] lexer
+- [ ] parser
 
 ### pest
 
