@@ -11,4 +11,4 @@
 
 - [x] parser
 
-![pest result](https://user-images.githubusercontent.com/68905624/194055040-417e54b9-0ce6-448d-8bac-e5eb915c0f73.png)
+![pest result](https://user-images.githubusercontent.com/68905624/194480991-ea9fbbcf-4a66-4f1e-8693-69d7202b45bc.png)
