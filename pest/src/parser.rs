@@ -2,7 +2,7 @@ use pest::Parser;
 use pest_derive::Parser;
 
 #[derive(Parser)]
-#[grammar = "grammer/riscv.pest"]
+#[grammar = "grammar/riscv.pest"]
 struct RiscvParser;
 
 pub fn parse(src: &str) {
