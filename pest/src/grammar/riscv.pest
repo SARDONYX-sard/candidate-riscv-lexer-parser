@@ -11,20 +11,26 @@ space = _{ " "+ }
 // --------------------------------------------------------------
 // -- String tokens
 
-// Why are there two separate chars? => To eliminate `.`
+semiotic_str = _{ "_" | "." | "$" }
 
-// 1. expect `fence` in `fence.vma`
-char = _{ "_" | ASCII_ALPHANUMERIC }
+// 1. expect `f` in `fence.vma`
+// 2. expect `_` in `_entry`
+char = _{ semiotic_str | ASCII_ALPHA }
 
-// 2. expect `.vma` in `fence.vma`
-sub_char = _{ "." ~ ASCII_ALPHANUMERIC }
-
-// expect `_.e` in `_.entry1`
-// expect `_.1` in `_.1ntry1`
-string = _{ char ~ (sub_char)*  }
+// expect `.vma` in `fence.vma`
+sub_char = _{ semiotic_str | ASCII_ALPHANUMERIC }
 
 // expect `_.entry1` in `_.entry1`
-symbol = { string+ }
+// expect `_.1ntry1` in `_.1ntry1`
+str = _{ char ~ (sub_char)*  }
+
+// expect `_.entry1` in `_.entry1`
+symbol = { str }
+
+quote = _{ "\"" | "'" }
+
+// expect `"Hello!"` in `.asciiz "Hello!"`
+string = { quote ~ (!quote ~ ANY)* ~ quote }
 
 // --------------------------------------------------------------
 // -- Numeric tokens.
@@ -45,28 +51,59 @@ term = _{ symbol | num | "(" ~ formula ~ ")" }
 formula = _{ term ~ (operation ~ term)* }
 
 // --------------------------------------------------------------
+// -- C directives
+c_macro_prefix = _{ space* ~ "#" ~ space* }
+
+// expect `#line`
+c_oneline_start_macro = { c_macro_prefix ~ ("include"|"line"|"pragma") }
+c_oneline_macro = { c_oneline_start_macro  ~ (!newline ~ ANY)* }
+
+// expect `#if ~ ANY #endif`
+c_if_start_macro = { c_macro_prefix ~ ("if"|"ifdef"|"ifndef") }
+c_if_end_macro = { c_macro_prefix ~ "endif" }
+c_if_macro = { c_if_start_macro  ~ (!c_if_end_macro ~ ANY)* ~ c_if_end_macro}
+
+// expect `#define ~ ANY #undef`
+c_def_start_macro = _ { c_macro_prefix ~ "define"|"defined" }
+c_def_end_macro = _ { c_macro_prefix ~ "undef" }
+c_def_macro = { c_def_start_macro  ~ (!c_def_end_macro ~ ANY)* ~ c_def_end_macro}
+
+c_macro = { c_oneline_macro | c_def_macro | c_if_macro }
+
+// --------------------------------------------------------------
 // --One line tokens
 
 newline = _{ "\n" | "\r\n" }
 
-// - expect `# comment`
-comment = { "#" ~ (!newline ~ ANY)* }
+// - expect `comment` in `# comment\n`
+comment = { (!newline ~ ANY)* }
+
+// - expect `# comment` in `# comment\n`
+comment_line = _{ "#" ~ space* ~ comment }
 
 // - expect `_entry`
 label =  { symbol ~ ":" }
 
+// - expect `a1 | a2 | "Hello!" | 1 * (1 + 1)`
+operand = { symbol | string | formula }
+
+// - expect ` a1, a1, 1` in `addi a1, a1, 1`
+operands = _{ (space ~ operand)? ~  (space? ~ "," ~ space? ~ operand ~ space? )* }
+
+// - expect `.section` in `.section .text .text1 .text-1`
+pseudo_op = @{ "." ~ symbol }
+
 // - expect `.section .text .text1 .text-1`
-directive = { "." ~ symbol ~ space ~(("." | "+" | "-" )? ~ symbol ~ ("," ~ ("+" | "-")? ~ symbol)* )? }
+directive = { pseudo_op ~ operands }
 
 // - expect `addi` in `addi a1, a1, 1`
 mnemonic = @{ symbol }
-// - expect `a1 | a2 | 1 * (1 + 1)`
-operand = { formula | symbol }
+
 // - expect `addi a1, a1, 1`
-instruction = { mnemonic ~ (space ~ operand)? ~ space? ~  ("," ~ space? ~ operand ~ space? )* }
+instruction = { mnemonic ~ operands }
 
 // - expect `# comment | _entry: | .global | addi a1, a1, 1 | \r?\n`
-statement = _{ comment | label | directive | instruction | newline  | space}
+statement = _{ c_macro | comment_line | label | directive | instruction | newline  | space }
 
 // - expect multiline statements
 program = _{ (statement)* ~ newline? }
